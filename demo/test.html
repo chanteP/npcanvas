@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="content-language" content="zh-CN" />
+        
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+        <meta content="yes" name="apple-mobile-web-app-capable" />
+        <meta content="black" name="apple-mobile-web-app-status-bar-style" />
+        <meta content="telephone=no" name="format-detection" />
+        
+        <title>np canvas test</title>
+        
+        <style>
+        body{
+            padding: 0;
+            background: #000;
+        }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas"></canvas>
+        <script src="../dist/npcanvas.js"></script>
+        <script>
+            var npc = new NPCanvas(canvas);
+            npc.play();
+            var newBall = function(){
+                var x = Math.random() * npc.width;
+                var y = npc.height;
+                npc.create(x, y, function(ctx, fps){
+                    ctx.fillStyle = 'rgba(255,0,0,.2)';
+                    ctx.fillRect(0,0,30,30);
+                    this.y -= 30/fps;
+                    
+                    if(this.y < -30){
+                        this.die = true;
+                    }
+                });
+            }
+            setInterval(function(){
+                newBall();
+                console.log(npc.number);
+            }, 1000);
+        </script>
+    </body>
+</html>

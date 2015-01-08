@@ -1,0 +1,24 @@
+{
+  "name": "np-canvas",
+  "version": "1.0.0",
+  "description": "simple canvas engine",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chanteP/npcanvas.git"
+  },
+  "author": "chante",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chanteP/npcanvas/issues"
+  },
+  "homepage": "https://github.com/chanteP/npcanvas",
+  "devDependencies": {
+    "browserify": "^8.0.3",
+    "uglify-js": "^2.4.16",
+    "watchify": "^2.2.1"
+  }
+}
