@@ -1,7 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 require('./dev/engine');
 },{"./dev/engine":2}],2:[function(require,module,exports){
-
 var requestAnimationFrame = require('./kit').requestAnimationFrame;
 var parse = require('./kit').parse;
 var CanvasObject = require('./object');
@@ -170,6 +169,8 @@ var $ = {
 }
 module.exports = $;
 },{}],4:[function(require,module,exports){
+
+var marker = 'np';
 var CanvasObject = function(x, y, shape){
     if(arguments.length === 1){
         shape = x;
@@ -180,14 +181,24 @@ var CanvasObject = function(x, y, shape){
     this.shape = shape || function(){};
     this.die = false;
 
-    this.CanvasObject = 'np';
+    this.CanvasObject = marker;
 }
+CanvasObject.CanvasClass = marker;
 CanvasObject.extend = CanvasObject.prototype.extend = function(newClassConstructor){
-    newClassConstructor.prototype.__proto__ = new this;
+    var parent = this;
+    if(this.CanvasClass !== marker){
+        parent = CanvasObject;
+    }
+    if(typeof this === 'function'){
+        parent = new parent;   
+    }
+    newClassConstructor.prototype.__proto__ = parent;
+    newClassConstructor.extend = CanvasObject.extend;
+    newClassConstructor.CanvasClass = marker;
     return newClassConstructor;
 }
-CanvasObject.prototype.draw = function(ctx, spf){
-    this.shape(ctx, spf);
+CanvasObject.prototype.draw = function(ctx, fps){
+    this.shape(ctx, fps);
 }
 module.exports = CanvasObject;
 },{}]},{},[1]);

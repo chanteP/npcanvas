@@ -1,3 +1,5 @@
+
+var marker = 'np';
 var CanvasObject = function(x, y, shape){
     if(arguments.length === 1){
         shape = x;
@@ -8,13 +10,23 @@ var CanvasObject = function(x, y, shape){
     this.shape = shape || function(){};
     this.die = false;
 
-    this.CanvasObject = 'np';
+    this.CanvasObject = marker;
 }
+CanvasObject.CanvasClass = marker;
 CanvasObject.extend = CanvasObject.prototype.extend = function(newClassConstructor){
-    newClassConstructor.prototype.__proto__ = new this;
+    var parent = this;
+    if(this.CanvasClass !== marker){
+        parent = CanvasObject;
+    }
+    if(typeof this === 'function'){
+        parent = new parent;   
+    }
+    newClassConstructor.prototype.__proto__ = parent;
+    newClassConstructor.extend = CanvasObject.extend;
+    newClassConstructor.CanvasClass = marker;
     return newClassConstructor;
 }
-CanvasObject.prototype.draw = function(ctx, spf){
-    this.shape(ctx, spf);
+CanvasObject.prototype.draw = function(ctx, fps){
+    this.shape(ctx, fps);
 }
 module.exports = CanvasObject;

@@ -24,18 +24,32 @@
         <script>
             var npc = new NPCanvas(canvas);
             npc.play();
+            var Ball = function(){
+                this.color = 'rgba(0,0,255,.2)';
+            }
+            Ball.prototype.shape = function(ctx, fps){
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(0,0,15,0,2*Math.PI);
+                ctx.closePath();
+                ctx.fill();
+                this.y -= 30/fps;
+                
+                if(this.y < -30){
+                    this.die = true;
+                }
+            }
+            var CBall = function(){
+                this.x = Math.random() * npc.width;
+                this.y = npc.height;
+                this.color = 'hsla('+Math.random()*360+', 80%, 80%, .3)';
+                // this.color = 'rgba(255,0,255,.2)';
+            }
+            NPCanvas.extend(Ball);
+            Ball.extend(CBall);
             var newBall = function(){
-                var x = Math.random() * npc.width;
-                var y = npc.height;
-                npc.create(x, y, function(ctx, fps){
-                    ctx.fillStyle = 'rgba(255,0,0,.2)';
-                    ctx.fillRect(0,0,30,30);
-                    this.y -= 30/fps;
-                    
-                    if(this.y < -30){
-                        this.die = true;
-                    }
-                });
+                var b = new CBall();
+                npc.add(b);
             }
             setInterval(function(){
                 newBall();
