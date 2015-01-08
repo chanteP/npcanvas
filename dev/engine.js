@@ -55,6 +55,7 @@ Engine.prototype = {
     stop : function(){
         this.status = this.STOP;
         this.list.length = 0;
+        this.number = 0;
         return this;
     },
     pause : function(){
