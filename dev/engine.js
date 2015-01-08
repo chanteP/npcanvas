@@ -7,6 +7,7 @@ var Engine = function(canvasNode, config){
     this.list = [];
 
     this.canvas = canvasNode;
+    this._status = 0;
 
     this.fps = 60;
     this.number = 0;
@@ -41,11 +42,20 @@ Engine.prototype = {
         return this.canvas.height;
     },
     //control---------------------------------------------
-    status : 0,
+    set status(value){
+        if(this._status !== this.DESTROY){
+            this._status = value;
+        }
+        return this._status;
+    },
+    get status(){
+        return this._status;
+    },
 
     STOP : 0,
     PAUSE : 0,
     PLAY : 2,
+    DESTROY : 9,
 
     play : function(){
         this.status = this.PLAY;
@@ -64,6 +74,7 @@ Engine.prototype = {
     },
 
     refresh : function(){
+        if(this.status === this.DESTROY){return;}
         if(this.status !== this.STOP){
             this.number = 0;
             if(!this.static){
@@ -137,6 +148,12 @@ Engine.prototype = {
             this._fpsCounter = 1;
             this.renderCallback(this);
         }
+    },
+    //distroy---------------------------------------------
+    destroy : function(){
+        this.stop();
+        this.status = this.DESTROY;
+        this.list = [];
     }
 };
 
