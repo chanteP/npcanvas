@@ -2,7 +2,7 @@
 require('./dev/engine');
 },{"./dev/engine":2}],2:[function(require,module,exports){
 var requestAnimationFrame = require('./kit').requestAnimationFrame;
-var parse = require('./kit').parse;
+var merge = require('./kit').merge;
 var CanvasObject = require('./object');
 
 var Engine = function(canvasNode, config){
@@ -14,10 +14,12 @@ var Engine = function(canvasNode, config){
 
     this.fps = 60;
     this.number = 0;
-    this.config(config);
 
     this.ctx = canvasNode.getContext('2d');
-    this.ctx.translate(0.5, 0.5);
+    this.ctx.translate(.5, .5);
+
+    this.cfg = {};
+    this.config(config);
 }
 Engine.extend = CanvasObject.extend;
 Engine.create = function(x, y, shape){
@@ -28,7 +30,12 @@ Engine.prototype = {
 
     config : function(cfg){
         cfg = cfg || {};
-        this.renderCallback = cfg.renderCallback || this.renderCallback || function(){};
+
+        this.cfg = merge({
+            renderCallback : function(){}
+        }, this.cfg, cfg);
+
+        this.renderCallback = this.cfg.renderCallback;
     },
     set width(value){
         this.canvas && (this.canvas.width = value);
@@ -171,15 +178,13 @@ var $ = {
         || window.msRequestAnimationFrame
         || window.oRequestAnimationFrame
         || function(callback) {setTimeout(callback, 1000 / 60);},
-    parse : function(obj1, obj2){
-        var rs = {};
-        for(var key in obj1){
-            if(!obj1.hasOwnProperty(key)){continue;}
-            if(key in obj2){
-                rs[key] = obj2[key];
-            }
-            else{
-                rs[key] = obj1[key];
+    merge : function(){
+        var rs = {}, cur, args = arguments;
+        for(var i = 0, j = arguments.length; i < j; i++){
+            cur = arguments[i];
+            for(var key in cur){
+                if(!cur.hasOwnProperty(key)){continue;}
+                rs[key] = cur[key];
             }
         }
         return rs;

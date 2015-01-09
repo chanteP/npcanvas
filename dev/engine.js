@@ -1,5 +1,5 @@
 var requestAnimationFrame = require('./kit').requestAnimationFrame;
-var parse = require('./kit').parse;
+var merge = require('./kit').merge;
 var CanvasObject = require('./object');
 
 var Engine = function(canvasNode, config){
@@ -11,10 +11,12 @@ var Engine = function(canvasNode, config){
 
     this.fps = 60;
     this.number = 0;
-    this.config(config);
 
     this.ctx = canvasNode.getContext('2d');
-    this.ctx.translate(0.5, 0.5);
+    this.ctx.translate(.5, .5);
+
+    this.cfg = {};
+    this.config(config);
 }
 Engine.extend = CanvasObject.extend;
 Engine.create = function(x, y, shape){
@@ -25,7 +27,12 @@ Engine.prototype = {
 
     config : function(cfg){
         cfg = cfg || {};
-        this.renderCallback = cfg.renderCallback || this.renderCallback || function(){};
+
+        this.cfg = merge({
+            renderCallback : function(){}
+        }, this.cfg, cfg);
+
+        this.renderCallback = this.cfg.renderCallback;
     },
     set width(value){
         this.canvas && (this.canvas.width = value);

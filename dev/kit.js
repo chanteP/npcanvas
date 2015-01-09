@@ -6,15 +6,13 @@ var $ = {
         || window.msRequestAnimationFrame
         || window.oRequestAnimationFrame
         || function(callback) {setTimeout(callback, 1000 / 60);},
-    parse : function(obj1, obj2){
-        var rs = {};
-        for(var key in obj1){
-            if(!obj1.hasOwnProperty(key)){continue;}
-            if(key in obj2){
-                rs[key] = obj2[key];
-            }
-            else{
-                rs[key] = obj1[key];
+    merge : function(){
+        var rs = {}, cur, args = arguments;
+        for(var i = 0, j = arguments.length; i < j; i++){
+            cur = arguments[i];
+            for(var key in cur){
+                if(!cur.hasOwnProperty(key)){continue;}
+                rs[key] = cur[key];
             }
         }
         return rs;
