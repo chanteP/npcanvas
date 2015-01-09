@@ -42,10 +42,17 @@
                 this.y = npc.height;
                 this.color = 'hsla('+Math.random()*360+', 80%, 80%, .3)';
             });
+            var BBall = ball.extend(function(){
+                this.x = Math.random() * npc.width;
+                this.y = npc.height;
+                this.color = 'hsla('+Math.random()*360+', 0%, 80%, .3)';
+            })
+            npc.renderCallback = function(){
+                console.log(npc.fps, npc.number)
+            }
             setInterval(function(){
-                var b = new CBall();
+                var b = Math.random() > .5 ? new CBall : new BBall;
                 npc.add(b);
-                console.log(npc.number);
             }, 1000);
         </script>
     </body>
