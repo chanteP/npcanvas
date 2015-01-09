@@ -1,6 +1,6 @@
 {
   "name": "np-canvas",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "simple canvas engine",
   "main": "index.js",
   "scripts": {

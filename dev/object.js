@@ -30,7 +30,14 @@ CanvasObject.prototype.extend = function(newClassConstructor){
         return this.constructor.extend(newClassConstructor, this);
     }
     else{
-        return Object.create(this, newClassConstructor || {});
+        if(typeof newClassConstructor !== 'object' || newClassConstructor.toString() !== '[object Object]'){
+            newClassConstructor = {};
+        }
+        for(var key in newClassConstructor){
+            if(!newClassConstructor.hasOwnProperty(key)){continue;}
+            newClassConstructor[key] = {value:newClassConstructor[key]}
+        }
+        return Object.create(this, newClassConstructor);
     }
 }
 
