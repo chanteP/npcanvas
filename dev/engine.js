@@ -130,8 +130,7 @@ Engine.prototype = {
     },
     //object---------------------------------------------
     create : function(x, y, shape){
-        this.add(Engine.create(x, y, shape), this.list);
-        return this;
+        return Engine.create(x, y, shape);
     },
     add : function(obj, list){
         (list || this.list).push(obj);

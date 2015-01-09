@@ -133,8 +133,7 @@ Engine.prototype = {
     },
     //object---------------------------------------------
     create : function(x, y, shape){
-        this.add(Engine.create(x, y, shape), this.list);
-        return this;
+        return Engine.create(x, y, shape);
     },
     add : function(obj, list){
         (list || this.list).push(obj);
@@ -195,7 +194,7 @@ module.exports = $;
 
 var marker = 'np';
 var CanvasObject = function(x, y, shape){
-    if(arguments.length === 1){
+    if(typeof x === 'function'){
         shape = x;
         x = 0;
     }
@@ -203,23 +202,32 @@ var CanvasObject = function(x, y, shape){
     this.y = y || 0;
     this.shape = shape || function(){};
     this.die = false;
-
-    this.CanvasObject = marker;
 }
-CanvasObject.CanvasClass = marker;
-CanvasObject.extend = CanvasObject.prototype.extend = function(newClassConstructor){
-    var parent = this;
-    if(this.CanvasClass !== marker){
-        parent = CanvasObject;
+
+//构造器扩展构造器
+CanvasObject.extend = function(newClassConstructor, proto){
+    if(typeof newClassConstructor !== 'function'){
+        newClassConstructor = function(){}
     }
-    if(typeof this === 'function'){
-        parent = new parent;   
+    var parentFactory = this;
+    if(!(this instanceof CanvasObject)){
+        parentFactory = CanvasObject;
     }
-    newClassConstructor.prototype.__proto__ = parent;
-    newClassConstructor.extend = CanvasObject.extend;
-    newClassConstructor.CanvasClass = marker;
+    newClassConstructor.__proto__ = parentFactory;
+    newClassConstructor.prototype = proto || new parentFactory;
     return newClassConstructor;
 }
+//对象扩展对象，或构造器
+CanvasObject.prototype.extend = function(newClassConstructor){
+    if(typeof newClassConstructor === 'function'){
+        return this.constructor.extend(newClassConstructor, this);
+    }
+    else{
+        return Object.create(this, newClassConstructor || {});
+    }
+}
+
+//绘制
 CanvasObject.prototype.draw = function(ctx, fps){
     this.shape(ctx, fps);
 }

@@ -24,10 +24,8 @@
         <script>
             var npc = new NPCanvas(canvas);
             npc.play();
-            var Ball = function(){
-                this.color = 'rgba(0,0,255,.2)';
-            }
-            Ball.prototype.shape = function(ctx, fps){
+
+            var ball = npc.create(function(ctx, fps){
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
                 ctx.arc(0,0,15,0,2*Math.PI);
@@ -38,20 +36,15 @@
                 if(this.y < -30){
                     this.die = true;
                 }
-            }
-            var CBall = function(){
+            });
+            var CBall = ball.extend(function(){
                 this.x = Math.random() * npc.width;
                 this.y = npc.height;
                 this.color = 'hsla('+Math.random()*360+', 80%, 80%, .3)';
-            }
-            NPCanvas.extend(Ball);
-            Ball.extend(CBall);
-            var newBall = function(){
+            });
+            setInterval(function(){
                 var b = new CBall();
                 npc.add(b);
-            }
-            setInterval(function(){
-                newBall();
                 console.log(npc.number);
             }, 1000);
         </script>
