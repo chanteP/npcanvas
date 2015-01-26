@@ -2,6 +2,8 @@ var requestAnimationFrame = require('./kit').requestAnimationFrame;
 var merge = require('./kit').merge;
 var CanvasObject = require('./object');
 
+var max = Math.max;
+
 var Engine = function(canvasNode, config){
     if(!canvasNode){throw 'canvasNode not found';}
     this.list = [];
@@ -17,6 +19,10 @@ var Engine = function(canvasNode, config){
 
     this.cfg = {};
     this.config(config);
+    if(this.cfg.autoFix){
+        this.width = this.canvas.clientWidth * this.cfg.pixelRatio;
+        this.height = this.canvas.clientHeight * this.cfg.pixelRatio;
+    }
 }
 Engine.extend = CanvasObject.extend;
 Engine.create = function(x, y, shape){
@@ -30,9 +36,12 @@ Engine.prototype = {
 
         this.cfg = merge({
             renderCallback : function(){}
+            ,autoFix : true
+            ,pixelRatio : 1
         }, this.cfg, cfg);
 
         this.renderCallback = this.cfg.renderCallback;
+        this.pixelRatio = this.cfg.pixelRatio;
     },
     set width(value){
         this.canvas && (this.canvas.width = value);
@@ -50,23 +59,27 @@ Engine.prototype = {
     },
     //control---------------------------------------------
     set status(value){
-        if(this._status !== this.DESTROY){
-            this._status = value;
+        if(this._status === this.DESTROY){
+            this._status = this.DESTROY;
         }
-        return this._status;
+        return this._status = value;
     },
     get status(){
         return this._status;
     },
 
     STOP : 0,
-    PAUSE : 0,
+    PAUSE : 1,
     PLAY : 2,
+    WAIT : 4,
     DESTROY : 9,
 
     play : function(){
+        if(this.status === this.STOP){
+            this.status = this.PLAY;
+            this.refresh();
+        }
         this.status = this.PLAY;
-        this.refresh();
         return this;
     },
     stop : function(){
@@ -82,7 +95,7 @@ Engine.prototype = {
 
     refresh : function(){
         if(this.status === this.DESTROY){return;}
-        if(this.status !== this.STOP){
+        if(this.status === this.PLAY){
             this.number = 0;
             if(!this.static){
                 this.ctx.clearRect(0, 0, this.width, this.height);
@@ -91,6 +104,9 @@ Engine.prototype = {
             }
             else{
                 this.list.length = 0;
+            }
+            if(this.number === 0){
+                this.status = this.WAIT;
             }
         }
         this.fpsCalc();
@@ -116,9 +132,10 @@ Engine.prototype = {
                 }
                 continue;
             }
+            obj.life = this.timestamp - obj.timestamp;
             context.save();
             context.translate(obj.x, obj.y);
-            obj.draw(context, fps);
+            obj.draw(context, max(fps, 30));
             this.number++;
             context.restore();
             if(obj.die){
@@ -135,6 +152,11 @@ Engine.prototype = {
     add : function(obj, list){
         (list || this.list).push(obj);
         obj.engine = this;
+        obj.timestamp = this.timestamp;
+        obj.life = 0;
+        if(this.status === this.WAIT){
+            this.status = this.PLAY;
+        }
         return this;
     },
     del : function(obj){
@@ -143,6 +165,7 @@ Engine.prototype = {
     },
     //fps---------------------------------------------
     timestamp : null,
+    timer : 0,
     _fpsCounter : 1,
     _fpsFrequency : 60,
     fpsCalc : function(){
@@ -154,6 +177,7 @@ Engine.prototype = {
             this._fpsCounter = 1;
             this.renderCallback(this);
         }
+        this.timer++;
     },
     //distroy---------------------------------------------
     destroy : function(){

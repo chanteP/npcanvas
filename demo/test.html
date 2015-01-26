@@ -12,18 +12,21 @@
         <title>np canvas test</title>
         
         <style>
+        html{
+            height: 100%;
+        }
         body{
             padding: 0;
             background: #000;
+            height: 100%;
         }
         </style>
     </head>
     <body>
-        <canvas id="canvas"></canvas>
+        <canvas id="canvas" style="width:100%;height:100%;"></canvas>
         <script src="../dist/npcanvas.js"></script>
         <script>
             var npc = new NPCanvas(canvas);
-            npc.play();
 
             var ball = npc.create(function(ctx, fps){
                 ctx.fillStyle = this.color;
@@ -37,23 +40,18 @@
                     this.die = true;
                 }
             });
-            var CBall = ball.extend(function(){
-                this.x = Math.random() * npc.width;
-                this.y = npc.height;
-                this.color = 'hsla('+Math.random()*360+', 80%, 80%, .3)';
-            });
-            var BBall = ball.extend(function(){
-                this.x = Math.random() * npc.width;
-                this.y = npc.height;
-                this.color = 'hsla('+Math.random()*360+', 0%, 80%, .3)';
-            })
+
             npc.renderCallback = function(){
                 console.log(npc.fps, npc.number)
             }
             setInterval(function(){
-                var b = Math.random() > .5 ? new CBall : new BBall;
-                npc.add(b);
+                npc.add(ball.extend({
+                    x : Math.random() * npc.width,
+                    y : npc.height,
+                    color : 'hsla('+Math.random()*360+', 80%, 80%, .3)'
+                }));
             }, 1000);
+            npc.play();
         </script>
     </body>
 </html>

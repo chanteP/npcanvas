@@ -26,18 +26,17 @@ CanvasObject.extend = function(newClassConstructor, proto){
 }
 //对象扩展对象，或构造器
 CanvasObject.prototype.extend = function(newClassConstructor){
+    //构造器的话就用原来的extend啦
     if(typeof newClassConstructor === 'function'){
         return this.constructor.extend(newClassConstructor, this);
     }
     else{
+        //对象扩展
         if(typeof newClassConstructor !== 'object' || newClassConstructor.toString() !== '[object Object]'){
             newClassConstructor = {};
         }
-        for(var key in newClassConstructor){
-            if(!newClassConstructor.hasOwnProperty(key)){continue;}
-            newClassConstructor[key] = {value:newClassConstructor[key]}
-        }
-        return Object.create(this, newClassConstructor);
+        newClassConstructor.__proto__ = this;
+        return newClassConstructor;
     }
 }
 
