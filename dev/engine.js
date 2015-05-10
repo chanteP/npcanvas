@@ -19,10 +19,6 @@ var Engine = function(canvasNode, config){
 
     this.cfg = {};
     this.config(config);
-    if(this.cfg.autoFix){
-        this.width = this.canvas.clientWidth * this.cfg.pixelRatio;
-        this.height = this.canvas.clientHeight * this.cfg.pixelRatio;
-    }
 }
 Engine.extend = CanvasObject.extend;
 Engine.create = function(x, y, shape){
@@ -40,6 +36,10 @@ Engine.prototype = {
             ,pixelRatio : 1
         }, this.cfg, cfg);
 
+        if(this.cfg.autoFix){
+            this.width = this.canvas.clientWidth * this.cfg.pixelRatio;
+            this.height = this.canvas.clientHeight * this.cfg.pixelRatio;
+        }
         this.renderCallback = this.cfg.renderCallback;
         this.pixelRatio = this.cfg.pixelRatio;
     },
