@@ -199,13 +199,15 @@ Engine.prototype = {
     fpsCalc : function(){
         if(this._fpsCounter++ >= this._fpsFrequency){
             this.fire('fpsCount');
-            var dis = this.timestamp ? Date.now() - this.timestamp : 1000;
-            this.fps = (this._fpsFrequency / dis * 1000).toFixed(2);
+            var dis = Date.now() - this.timestamp;
+            if(this.timestamp){
+                this.fps = (this._fpsFrequency / dis * 1000).toFixed(2);
+            }
             this.timestamp = Date.now();
             this._fpsCounter = 1;
-            if(this.status !== this.stat.PLAY){
-                this.life += dis;    
-                this.fire('renderCallback');
+            if(this.status === this.stat.PLAY){
+                this.life += dis;
+                this.fire('renderCallback');   
             }
         }
         this.frame++;
