@@ -47,12 +47,12 @@
             });
 
             var time = Date.now();
-            npc.on('renderCallback', function(){
+            npc.on('fpsCount', function(){
                 console.log(npc.fps, npc.number, npc.life, Date.now() - time, npc.life - Date.now() + time)
             });
 
             setInterval(function(){
-                npc.add(ball.extend({
+                (npc.status === npc.stat.PLAY || npc.status === npc.stat.WAIT) && npc.add(ball.extend({
                     x : Math.random() * npc.width,
                     y : npc.height,
                     color : 'hsla('+Math.random()*360+', 80%, 80%, .3)'

@@ -73,6 +73,7 @@ Engine.prototype = {
     stat : stat,
     _status : stat.STOP,   
     set status(value){
+        this.fire('stateChange');
         if(this._status === this.stat.DESTROY){return;}
         return this._status = value;
     },
@@ -191,24 +192,23 @@ Engine.prototype = {
     },
     //fps---------------------------------------------
     timestamp : null,
-    timer : 0,
+    frame : 0,
     life : 0,
     _fpsCounter : 1,
     _fpsFrequency : 60,
     fpsCalc : function(){
         if(this._fpsCounter++ >= this._fpsFrequency){
-            var dis = Date.now() - this.timestamp;
-            if(this.status === this.stat.PLAY){
-                this.life += dis;    
-            }
-            if(this.timestamp){
-                this.fps = (this._fpsFrequency / dis * 1000).toFixed(2);
-            }
+            this.fire('fpsCount');
+            var dis = this.timestamp ? Date.now() - this.timestamp : 1000;
+            this.fps = (this._fpsFrequency / dis * 1000).toFixed(2);
             this.timestamp = Date.now();
             this._fpsCounter = 1;
-            this.fire('renderCallback');
+            if(this.status !== this.stat.PLAY){
+                this.life += dis;    
+                this.fire('renderCallback');
+            }
         }
-        this.timer++;
+        this.frame++;
     },
     //distroy---------------------------------------------
     destroy : function(){
