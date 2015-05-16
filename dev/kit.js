@@ -7,12 +7,19 @@ var $ = {
         || window.oRequestAnimationFrame
         || function(callback) {setTimeout(callback, 1000 / 60);},
     merge : function(){
-        var rs = {}, cur, args = arguments;
-        for(var i = 0, j = arguments.length; i < j; i++){
+        var hold = typeof arguments[arguments.length - 1] === 'boolean', 
+            holdRs = hold && arguments[arguments.length - 1];
+        var rs = holdRs ? arguments[0] : {}, 
+            cur, 
+            args = arguments;
+        for(var i = holdRs ? 1 : 0, j = arguments.length + (hold ? -1 : 0); i < j; i++){
             cur = arguments[i];
-            for(var key in cur){
-                if(!cur.hasOwnProperty(key)){continue;}
-                rs[key] = cur[key];
+            if(typeof cur === 'object'){
+                for(var key in cur){
+                    if(cur.hasOwnProperty(key)){
+                        rs[key] = cur[key];
+                    }
+                }   
             }
         }
         return rs;

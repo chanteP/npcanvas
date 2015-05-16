@@ -1,6 +1,6 @@
 {
   "name": "np-canvas",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "simple canvas engine",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/chanteP/npcanvas.git"
   },
-  "author": "chante",
+  "author": "chanteP",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/chanteP/npcanvas/issues"

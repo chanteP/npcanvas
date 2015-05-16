@@ -4,44 +4,56 @@ var CanvasObject = require('./object');
 
 var max = Math.max;
 
+var stat = {
+    STOP    : 0,
+    PAUSE   : 1,
+    PLAY    : 2,
+    WAIT    : 4,
+    DESTROY : 9
+}
+
 var Engine = function(canvasNode, config){
     if(!canvasNode){throw 'canvasNode not found';}
     this.list = [];
 
     this.canvas = canvasNode;
-    this._status = 0;
-
-    this.fps = 60;
-    this.number = 0;
-
     this.ctx = canvasNode.getContext('2d');
-    this.ctx.translate(.5, .5);
 
-    this.cfg = {};
-    this.config(config);
+    this.fps = 60;                                      //fps
+    this.number = 0;                                    //渲染物体数量
+
+    this.config = merge({
+        fitSize     : true                              //初始适应canvas节点尺寸
+        ,pixelRatio : window.devicePixelRatio || 1      //分辨率
+        ,lineFix    : true                              //0.5像素边缘修正
+
+        ,engine     : this
+        ,set : this._setConfig
+    }, config);
+    this.config.set.call(this, this.config);
 }
-Engine.extend = CanvasObject.extend;
+//object
 Engine.create = function(x, y, shape){
     return new CanvasObject(x, y, shape);
 }
+Engine.object = CanvasObject;
+//method
 Engine.prototype = {
     constructor : Engine,
 
-    config : function(cfg){
-        cfg = cfg || {};
+    _setConfig : function(config){
+        var context = this.engine || this;
+        config = config || {};
 
-        this.cfg = merge({
-            renderCallback : function(){}
-            ,autoFix : true
-            ,pixelRatio : 1
-        }, this.cfg, cfg);
+        context.config = merge(context.config, config, true);
 
-        if(this.cfg.autoFix){
-            this.width = this.canvas.clientWidth * this.cfg.pixelRatio;
-            this.height = this.canvas.clientHeight * this.cfg.pixelRatio;
+        if(config.fitSize){
+            context.width = context.canvas.clientWidth * context.config.pixelRatio;
+            context.height = context.canvas.clientHeight * context.config.pixelRatio;
         }
-        this.renderCallback = this.cfg.renderCallback;
-        this.pixelRatio = this.cfg.pixelRatio;
+        if(config.lineFix){
+            context.ctx.translate(.5, .5);
+        }
     },
     set width(value){
         this.canvas && (this.canvas.width = value);
@@ -58,44 +70,38 @@ Engine.prototype = {
         return this.canvas.height;
     },
     //control---------------------------------------------
+    stat : stat,
+    _status : stat.STOP,   
     set status(value){
-        if(this._status === this.DESTROY){
-            this._status = this.DESTROY;
-        }
+        if(this._status === this.stat.DESTROY){return;}
         return this._status = value;
     },
     get status(){
         return this._status;
     },
 
-    STOP : 0,
-    PAUSE : 1,
-    PLAY : 2,
-    WAIT : 4,
-    DESTROY : 9,
-
     play : function(){
-        if(this.status === this.STOP){
-            this.status = this.PLAY;
+        if(this.status === this.stat.STOP){
+            this.status = this.stat.PLAY;
             this.refresh();
         }
-        this.status = this.PLAY;
+        this.status = this.stat.PLAY;
         return this;
     },
     stop : function(){
-        this.status = this.STOP;
-        this.list.length = 0;
+        this.status = this.stat.STOP;
+        this.clean();
         this.number = 0;
         return this;
     },
     pause : function(){
-        this.status = this.PAUSE;
+        this.status = this.stat.PAUSE;
         return this;
     },
 
     refresh : function(){
-        if(this.status === this.DESTROY){return;}
-        if(this.status === this.PLAY){
+        if(this.status === this.stat.DESTROY){return;}
+        if(this.status === this.stat.PLAY){
             this.number = 0;
             if(!this.static){
                 this.ctx.clearRect(0, 0, this.width, this.height);
@@ -103,10 +109,10 @@ Engine.prototype = {
                 this.render(this.list);
             }
             else{
-                this.list.length = 0;
+                this.clean();
             }
             if(this.number === 0){
-                this.status = this.WAIT;
+                this.status = this.stat.WAIT;
             }
         }
         this.fpsCalc();
@@ -121,41 +127,32 @@ Engine.prototype = {
         for(var i = 0; i < list.length; i++){
             obj = list[i];
             if(Array.isArray(obj)){
-                if(obj.config){
-                    context.save();
-                    this.config(obj.config);
-                    this.render(obj);
-                    context.restore();
-                }
-                else{
-                    this.render(obj);
-                }
-                continue;
+                this.render(obj);
             }
-            obj.life = this.timestamp - obj.timestamp;
-            context.save();
-            context.translate(obj.x, obj.y);
-            obj.draw(context, max(fps, 30));
-            this.number++;
-            context.restore();
-            if(obj.die){
-                list.splice(i, 1);
-                i--;
+            else{
+                obj.life = this.timestamp - obj.timestamp;
+                context.save();
+                context.translate(obj.x, obj.y);
+                obj.draw(context, max(fps, 30)); //TODO blur迷之延时
+                this.number++;
+                context.restore();
+                if(obj.die){
+                    list.splice(i, 1);
+                    i--;
+                }
             }
         };
         return this;
     },
     //object---------------------------------------------
-    create : function(x, y, shape){
-        return Engine.create(x, y, shape);
-    },
+    create : Engine.create,
     add : function(obj, list){
         (list || this.list).push(obj);
         obj.engine = this;
         obj.timestamp = this.timestamp;
         obj.life = 0;
-        if(this.status === this.WAIT){
-            this.status = this.PLAY;
+        if(this.status === this.stat.WAIT){
+            this.status = this.stat.PLAY;
         }
         return this;
     },
@@ -163,29 +160,65 @@ Engine.prototype = {
         obj.die = true;
         return this;
     },
+    clean : function(){
+        this.list.splice(0, this.list.length);
+    },
+    //listener---------------------------------------------
+    _listener : {},
+    on : function(evt, func){
+        if(typeof evt !== 'string' || typeof func !== 'function'){return this;}
+        if(!Array.isArray(this._listener[evt])){
+            this._listener[evt] = [];
+        }
+        this._listener[evt].push(func);
+        return this;
+    },
+    off : function(evt, func){
+        if(typeof evt !== 'string' || typeof func !== 'function'){return this;}
+        if(!Array.isArray(this._listener[evt])){return this;}
+        var index = this._listener[evt].indexOf(func);
+        if(index < 0){return this;}
+        this._listener[evt].splice(index, 1);
+        return this;
+    },
+    fire : function(evt, args){
+        if(!Array.isArray(this._listener[evt])){return this;}
+        var npc = this;
+        this._listener[evt].forEach(function(func){
+            func.apply(npc, args);
+        });
+        return this;
+    },
     //fps---------------------------------------------
     timestamp : null,
     timer : 0,
+    life : 0,
     _fpsCounter : 1,
     _fpsFrequency : 60,
     fpsCalc : function(){
         if(this._fpsCounter++ >= this._fpsFrequency){
+            var dis = Date.now() - this.timestamp;
+            if(this.status === this.stat.PLAY){
+                this.life += dis;    
+            }
             if(this.timestamp){
-                this.fps = (this._fpsFrequency / (Date.now() - this.timestamp) * 1000).toFixed(2);
+                this.fps = (this._fpsFrequency / dis * 1000).toFixed(2);
             }
             this.timestamp = Date.now();
             this._fpsCounter = 1;
-            this.renderCallback(this);
+            this.fire('renderCallback');
         }
         this.timer++;
     },
     //distroy---------------------------------------------
     destroy : function(){
         this.stop();
-        this.status = this.DESTROY;
-        this.list = [];
+        this.status = this.stat.DESTROY;
+        this.clean();
     }
 };
 
-window.NPCanvas = Engine;
-module.exports = Engine;
+if(typeof window.define === 'function'){
+    define('NPCanvas', Engine);
+}
+module.exports = window.NPCanvas = Engine;

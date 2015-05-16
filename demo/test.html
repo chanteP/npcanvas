@@ -28,6 +28,11 @@
         <script>
             var npc = new NPCanvas(canvas);
 
+            npc.config.set({
+                pixelRatio : 1,
+                fitSize : true
+            });
+
             var ball = npc.create(function(ctx, fps){
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
@@ -41,9 +46,11 @@
                 }
             });
 
-            npc.renderCallback = function(){
-                console.log(npc.fps, npc.number)
-            }
+            var time = Date.now();
+            npc.on('renderCallback', function(){
+                console.log(npc.fps, npc.number, npc.life, Date.now() - time, npc.life - Date.now() + time)
+            });
+
             setInterval(function(){
                 npc.add(ball.extend({
                     x : Math.random() * npc.width,

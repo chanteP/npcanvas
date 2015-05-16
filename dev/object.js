@@ -10,7 +10,6 @@ var CanvasObject = function(x, y, shape){
     this.shape = shape || function(){};
     this.die = false;
 }
-
 //构造器扩展构造器
 CanvasObject.extend = function(newClassConstructor, proto){
     if(typeof newClassConstructor !== 'function'){
@@ -43,5 +42,9 @@ CanvasObject.prototype.extend = function(newClassConstructor){
 //绘制
 CanvasObject.prototype.draw = function(ctx, fps){
     this.shape(ctx, fps);
+}
+//hit
+// TODO
+CanvasObject.prototype.hit = function(ctx, fps){
 }
 module.exports = CanvasObject;
