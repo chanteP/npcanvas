@@ -7,12 +7,18 @@ var CanvasObject = require('./object');
 
 var max = Math.max;
 
+var sWidth = screen.width;
+
 var stat = {
     STOP    : 0,
     PAUSE   : 1,
     PLAY    : 2,
     WAIT    : 4,
     DESTROY : 9
+}
+var evt = {
+    renderCallback  : 'renderCallback',
+    fpsCount        : 'fpsCount'
 }
 
 var Engine = function(canvasNode, config){
@@ -29,6 +35,9 @@ var Engine = function(canvasNode, config){
         fitSize     : true                              //初始适应canvas节点尺寸
         ,pixelRatio : window.devicePixelRatio || 1      //分辨率
         ,lineFix    : true                              //0.5像素边缘修正
+        ,fpsLimit    : null                             //限制渲染数
+        ,perspective : null                             //透视平面距离, 800
+        ,visionWidth : null                           //0距离尺寸
 
         ,engine     : this
         ,set : this._setConfig
@@ -57,6 +66,17 @@ Engine.prototype = {
         if(config.lineFix){
             context.ctx.translate(.5, .5);
         }
+        if(typeof config.fpsLimit === 'number'){
+            context._fpsFrequency = config.fpsLimit;
+            context.requestAnimationFrame = function(func){
+                setTimeout(func, 1000/config.fpsLimit);
+            }
+        }
+        else{
+            context._fpsFrequency = 60;
+            context.requestAnimationFrame = requestAnimationFrame;
+        }
+        context.visionWidth = config.visionWidth || sWidth * 5 * context.config.pixelRatio;
     },
     set width(value){
         this.canvas && (this.canvas.width = value);
@@ -86,6 +106,7 @@ Engine.prototype = {
 
     play : function(){
         if(this.status === this.stat.STOP){
+            this.timestamp = Date.now();
             this.status = this.stat.PLAY;
             this.refresh();
         }
@@ -115,13 +136,16 @@ Engine.prototype = {
             else{
                 this.clean();
             }
+            this.frame++;
+            this.fire(evt.renderCallback);   
             if(this.number === 0){
                 this.status = this.stat.WAIT;
             }
         }
         this.fpsCalc();
-        requestAnimationFrame(this.refresh.bind(this));
+        (null, this.requestAnimationFrame)(this.refresh.bind(this));
     },
+    requestAnimationFrame : requestAnimationFrame,
     //render---------------------------------------------
     static : false, //静态
     render : function(list){
@@ -136,8 +160,16 @@ Engine.prototype = {
             else{
                 obj.life = this.timestamp - obj.timestamp;
                 context.save();
-                context.translate(obj.x, obj.y);
-                obj.draw(context, max(fps, 30)); //TODO blur迷之延时
+                if(this.config.perspective && obj.z){
+                    //TODO z > perspective
+                    var scale = 1 + (obj.z / this.config.perspective) * (this.visionWidth / this.width - 1);
+                    context.scale(scale, scale);
+                    context.translate(obj.x, obj.y);
+                }
+                else{
+                    context.translate(obj.x, obj.y);
+                }
+                obj.draw(context, max(fps, 30));
                 this.number++;
                 context.restore();
                 if(obj.die){
@@ -196,24 +228,15 @@ Engine.prototype = {
     //fps---------------------------------------------
     timestamp : null,
     frame : 0,
-    life : 0,
     _fpsCounter : 1,
     _fpsFrequency : 60,
     fpsCalc : function(){
         if(this._fpsCounter++ >= this._fpsFrequency){
-            this.fire('fpsCount');
-            var dis = Date.now() - this.timestamp;
-            if(this.timestamp){
-                this.fps = (this._fpsFrequency / dis * 1000).toFixed(2);
-            }
+            this.fire(evt.fpsCount);
+            this.fps = (this._fpsFrequency / (Date.now() - this.timestamp) * 1000).toFixed(2);
             this.timestamp = Date.now();
             this._fpsCounter = 1;
-            if(this.status === this.stat.PLAY){
-                this.life += dis;
-                this.fire('renderCallback');   
-            }
         }
-        this.frame++;
     },
     //distroy---------------------------------------------
     destroy : function(){
@@ -266,6 +289,7 @@ var CanvasObject = function(x, y, shape){
     }
     this.x = x || 0;
     this.y = y || 0;
+    this.z = 0;
     this.shape = shape || function(){};
     this.die = false;
 }

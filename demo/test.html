@@ -30,7 +30,9 @@
 
             npc.config.set({
                 pixelRatio : 1,
-                fitSize : true
+                fitSize : true,
+                fpsLimit:60,
+                perspective : 800
             });
 
             var ball = npc.create(function(ctx, fps){
@@ -48,16 +50,22 @@
 
             var time = Date.now();
             npc.on('fpsCount', function(){
-                console.log(npc.fps, npc.number, npc.life, Date.now() - time, npc.life - Date.now() + time)
+                console.log(npc.fps, npc.number, npc.frame, Date.now() - time)
             });
 
-            setInterval(function(){
-                (npc.status === npc.stat.PLAY || npc.status === npc.stat.WAIT) && npc.add(ball.extend({
-                    x : Math.random() * npc.width,
-                    y : npc.height,
-                    color : 'hsla('+Math.random()*360+', 80%, 80%, .3)'
-                }));
-            }, 1000);
+            var f = 0;
+            npc.on('renderCallback', function(){
+                if(!this.number || this.frame - f >= 60){
+                    npc.add(ball.extend({
+                        x : Math.random() * npc.width,
+                        y : npc.height,
+                        z : Math.random() * 300,
+                        color : 'hsla('+Math.random()*360+', 80%, 80%, .3)'
+                    }));
+                    f = this.frame;
+                }
+            });
+
             npc.play();
         </script>
     </body>

@@ -1,0 +1,34 @@
+#demo
+	var npc = new NPCanvas(canvasNode);
+
+	var ball = npc.create(function(ctx, fps){
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(0,0,15,0,2*Math.PI);
+        ctx.closePath();
+        ctx.fill();
+        this.y -= 30/fps;
+        
+        if(this.y < -30){
+            this.die = true;
+        }
+    });
+
+    npc.add(ball.extend({
+    	x : 0,
+    	y : 100
+    }))
+
+    npc.play();
+
+$config
+
+1.fitSize    : true                             //初始适应canvas节点尺寸
+2.pixelRatio : window.devicePixelRatio || 1      //分辨率
+3.lineFix    : true                              //0.5像素边缘修正
+4.fpsLimit   : null                              //限制渲染数
+
+#event
+
+1.renderCallback
+2.fpsCount

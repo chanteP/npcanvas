@@ -7,6 +7,7 @@ var CanvasObject = function(x, y, shape){
     }
     this.x = x || 0;
     this.y = y || 0;
+    this.z = 0;
     this.shape = shape || function(){};
     this.die = false;
 }
